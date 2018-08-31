@@ -1,4 +1,4 @@
-Red Wines - EDA by Christophe
+Red Wines - EDA by NeoxData
 ========================================================
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
