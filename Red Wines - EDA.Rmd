@@ -1,0 +1,585 @@
+Red Wines - EDA by Christophe
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using in your analysis in this code
+# chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk. This
+# prevents the code from displaying in the knitted HTML output. You should set
+# echo=FALSE for all code chunks in your file, unless it makes sense for your
+# report to show the code that generated a particular plot.
+
+# The other parameters for "message" and "warning" should also be set to FALSE
+# for other code chunks once you have verified that each plot comes out as you
+# want it to. This will clean up the flow of your report.
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(GGally)
+library(memisc)
+library(RColorBrewer)
+```
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+wine<-read.csv('wineQualityReds.csv')
+
+```
+
+I have choosen the red wine dataset from a specific vineyard: the Portuguese "Vinho Verde". The dataset has due to privacy and logistic issues, only physicochemical (inputs) and sensory (the output) variables.The inputs include objective tests (e.g. PH values) and the output is based on sensory data (median of at least 3 evaluations made by wine experts). Each expert graded the wine quality between 0 (very bad) and 10 (very excellent). The classes are ordered and not balanced (e.g. there are munch more normal wines than excellent or poor ones). Finally no missing values exist in the dataset.
+
+Inputs variables:
+
+   1 - fixed acidity (tartaric acid - g / dm^3) \
+   2 - volatile acidity (acetic acid - g / dm^3)\ 
+   3 - citric acid (g / dm^3) \
+   4 - residual sugar (g / dm^3)\ 
+   5 - chlorides (sodium chloride - g / dm^3) \
+   6 - free sulfur dioxide (mg / dm^3) \
+   7 - total sulfur dioxide (mg / dm^3) \
+   8 - density (g / cm^3) \
+   9 - pH \
+   10 - sulphates (potassium sulphate - g / dm^3) \
+   11 - alcohol (% by volume) \
+   
+Output variable (based on sensory data): 
+
+   12 - quality (score between 0 and 10)
+
+Description of attributes:
+
+   1 - fixed acidity: most acids involved with wine or fixed or nonvolatile (do not evaporate readily)
+
+   2 - volatile acidity: the amount of acetic acid in wine, which at too high of levels can lead to an unpleasant, vinegar taste
+
+   3 - citric acid: found in small quantities, citric acid can add 'freshness' and flavor to wines
+
+   4 - residual sugar: the amount of sugar remaining after fermentation stops, it's rare to find wines with less than 1 gram/liter and wines with greater than 45 grams/liter are considered sweet
+
+   5 - chlorides: the amount of salt in the wine
+
+   6 - free sulfur dioxide: the free form of SO2 exists in equilibrium between molecular SO2 (as a dissolved gas) and bisulfite ion; it prevents microbial growth and the oxidation of wine
+
+   7 - total sulfur dioxide: amount of free and bound forms of S02; in low concentrations, SO2 is mostly undetectable in wine, but at free SO2 concentrations over 50 ppm, SO2 becomes evident in the nose and taste of wine
+
+   8 - density: the density of water is close to that of water depending on the percent alcohol and sugar content
+
+   9 - pH: describes how acidic or basic a wine is on a scale from 0 (very acidic) to 14 (very basic); most wines are between 3-4 on the pH scale
+
+   10 - sulphates: a wine additive which can contribute to sulfur dioxide gas (S02) levels, wich acts as an antimicrobial and antioxidant
+
+   11 - alcohol: the percent alcohol content of the wine
+
+   12 - quality (score between 0 and 10)
+
+# Univariate Plots Section
+
+What is the size of the dataset?
+
+```{r, echo=FALSE, Univariate_Plots}
+dim(wine)
+```
+There are 13 variables because the first one ("X") is like an ID for each  
+observation.
+
+What look like the different variables?
+
+```{r echo=FALSE}
+str(wine)
+```
+
+Some statistics on the features
+
+```{r echo=FALSE}
+summary(wine)
+```
+
+Let's create a rating variable for easing the plotting:
+
+```{r}
+wine$rating<-ordered(wine$quality, levels=c(1,2,3,4,5,6,7,8,9,10))
+```
+
+Let's see the number of wine in each quality rating
+
+```{r echo=FALSE, message=FALSE}
+ggplot(aes(x=quality), data=wine)+
+  geom_histogram(binwidth=1, color='white')
+```
+
+```{r echo=FALSE}
+#I will calculate the percentage of high quality wine
+length(which(wine$quality == 8))/length(wine$quality)*100
+
+```
+
+The number of wines with the highest quality count only for 1.12% of the dataset.
+
+Are these red wines with high alcohol degree?
+
+```{r echo=FALSE}
+ggplot(aes(x=alcohol), data=wine)+
+  geom_histogram(binwidth = 0.1)
+```
+
+A high number of wine have around 9.5%. The majority of wine have alcohol in a range of 9 to 12 which is a low degree for wine. However the origin of wine is known and it is normal for this location such result. 
+
+Let's have a look at the pH of the wines
+
+```{r echo=FALSE}
+ggplot(aes(x=pH),data=wine)+geom_histogram(binwidth = 0.02)
+```
+
+As we could expect it is in the range of 3 to 3.5. It is odd to have no wine around 3.7 or 2.9 but it might be due to a missing value rather than an error in the data. The curve looks like a normal distribution.
+
+Let's see the amount of salt in wine
+
+```{r echo=FALSE}
+ggplot(aes(x=chlorides), data=wine)+geom_histogram(binwidth = 0.02)
+```
+
+As we could expect it is quite low.
+
+Let's check the density of wine which is in relation with the residual sugar and alcohol
+
+```{r echo=FALSE}
+ggplot(aes(x=density), data=wine)+geom_histogram(binwidth = 0.001)
+```
+
+The curve has a normal shape and it is below 1 as expected. Above 1, means that the fermentation process is not completely executed and it might provide bad wine (we will check this assumption later)
+
+Let's see then the amount of sugar which is also an indicator for the sweetness of the wine
+
+```{r echo=FALSE}
+ggplot(aes(x=residual.sugar), data=wine)+
+  geom_histogram(binwidth = 0.5)+
+  #I am adding the mean of sugar for all wines as reference with a vertical line
+  geom_vline(xintercept = mean(wine$residual.sugar), color='red')
+
+```
+
+The wines in the dataset are not not really sweet as the majority are below the mean of around 3g/L.
+
+Let's see the volatile acidity variables
+
+```{r echo=FALSE}
+ggplot(aes(x=volatile.acidity), data=wine)+geom_histogram(binwidth = 0.02)
+
+```
+
+```{r echo=FALSE}
+ggplot(aes(x=fixed.acidity), data=wine)+geom_histogram(binwidth = 0.5)
+
+```
+
+The curve is little positive skew.
+
+Let's see the amount of sulphates in the wines
+
+```{r echo=FALSE}
+ggplot(aes(x=sulphates), data=wine)+geom_histogram(binwidth = 0.05)
+```
+
+The amount of sulphates is between 0.5 to 1 g/L. It is an important information as it provides SO2 to the wine to prevent oxygenation and bacterial proliferation. If sufficient free sulfur dioxides it will lower volatile acidity. We will see this relation in the next chapter.
+
+Let's see then the total SO2
+
+```{r echo=FALSE}
+ggplot(aes(x=total.sulfur.dioxide), data=wine)+
+  #changing the binwidth for more clarity
+  geom_histogram(binwidth = 1)
+
+```
+
+We can see some outliers but the majority is below 100 and it is expected as in Europe the legal limit for red wine (in general) is 150 mg/L.
+
+Let's see the free SO2 which is important as the molecules will protect the wine 
+
+```{r echo=FALSE}
+ggplot(aes(x=free.sulfur.dioxide), data=wine)+
+  #changing the binwidth for more clarity
+  geom_histogram(binwidth = 1)
+
+```
+
+Some statistics about SO2:
+
+```{r echo=FALSE}
+summary(wine$free.sulfur.dioxide)
+```
+
+The curve is a right-skewed distribution with a mean at 15.87. 
+
+Let's see the amount of citric acidity which adds a freshness to the wine
+
+```{r echo=FALSE,message=FALSE}
+ggplot(aes(x=citric.acid), data=wine)+
+  geom_histogram()
+
+```
+
+The curve is positively skewed distribution.It is used for basic wine but introduces an instability in microbial environment. Due to this defect, winemakers use more often tartaric acid (here it is the fixed acidity parameter) to acidify wines.
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+
+The dataset has 1599 observations of 13 variables (including the variable rating which I created). They are numerical except for quality, X (integer values) and rating (ordinal factor). The data is also tidy.
+
+
+### What is/are the main feature(s) of interest in your dataset?
+
+The main interest is to determine the variable which are responsible for a good wine. In literature the quality of a wine is based on the level of citric acid, alcohol, pH and residual sugar. I will check these features more closely then.
+
+### What other features in the dataset do you think will help support your\
+investigation into your feature(s) of interest?
+
+I will check the level of density which is an indication for the fermentation process and the SO2 which is also a composant to protect the wine against oxygenation and microbial environment.
+
+### Did you create any new variables from existing variables in the dataset?
+
+Yes I have created an ordered factor for easing the plotting in some investigation.
+
+### Of the features you investigated, were there any unusual distributions?\
+Did you perform any operations on the data to tidy, adjust, or change the\
+form of the data? If so, why did you do this?
+
+No, the dataset was tidy and already wrangled. I have noticed some skewed distribution and outliers but nothing that will influence our investigation heavely.
+
+# Bivariate Plots Section
+
+
+Let's have an overview by combining variables amongst them
+
+````{r echo=FALSE, fig.height=15, fig.width=15, Bivariate_Plots}
+#I drop the columns "rating" and "X" and keep all the others
+ggpairs(subset(wine, select=-c(rating, X)),upper = list(continuous = wrap('cor', size = 5)))
+```
+
+Volatile acidity (VA) is often associated with oxidation problems in a wine due to the fact that both result from overexposure to oxygen and/or a lack of sulfur dioxide management.
+
+```{r echo=FALSE}
+ggplot(aes(x=volatile.acidity, y=free.sulfur.dioxide), data=wine)+
+  geom_point()
+```
+
+The low VA and free sulfur dioxide could mean that the excess of free SO2 maintain a good level of VA.
+
+In winemaking, the citric-sugar co-metabolism can also increase the formation of volatile acid in wine which can affect the wine aroma negatively if present at excessive levels.
+ 
+```{r echo=FALSE}
+ggplot(aes(y=citric.acid, x=rating), data=wine)+
+  geom_boxplot()
+
+```
+
+Let's see the rating with the degree of alcohol
+
+```{r echo=FALSE}
+ggplot(aes(x=rating, y=alcohol), data=wine)+
+  geom_boxplot()+
+  #adding a vertical line for the alcohol mean and show the mean for each rating
+  geom_hline(yintercept=mean(wine$alcohol),color='blue', linetype=2)+
+  stat_summary(fun.y=mean, geom='point', shape=3)
+```
+
+The rating against the sugar would give information about the sweetness of wines
+
+```{r echo=FALSE}
+ggplot(aes(x=rating, y=residual.sugar), data=wine)+
+  geom_boxplot()
+
+```
+ 
+The quantity of SO2 is important as it protects the wine. 
+
+Is there a discrepency in the level of SO2 amongst wine?
+
+```{r echo=FALSE}
+ggplot(aes(x=rating, y=free.sulfur.dioxide), data=wine)+
+  geom_boxplot()
+
+```
+
+There is no huge difference especially with wine of quality 5 and 6.
+
+```{r echo=FALSE}
+ggplot(aes(x=total.sulfur.dioxide, y=free.sulfur.dioxide), data=wine)+
+  geom_point()
+
+```
+
+```{r echo=FALSE}
+cor.test(wine$free.sulfur.dioxide,wine$total.sulfur.dioxide, method='pearson')
+```
+
+Here is the strongest correlation found thanks to the help of ggpairs. However this relationship is interesting but understandable as free SO2 is included in the total sulfur dioxide.
+ 
+```{r echo=FALSE}
+ggplot(aes(x=alcohol, y=residual.sugar), data=wine)+
+  geom_point()
+
+```
+
+We would normally expect that more alcohol will reduce the amount of sugar. Here it remains constant (approximately) at low level.
+
+```{r echo=FALSE, warning=FALSE}
+ggplot(aes(x=density, y=residual.sugar), data=wine)+
+  geom_point()+
+  #limiting the axis for more clarity and adding regression line
+  xlim(0.995,1)+
+  ylim(0,5) +
+  geom_smooth(method = 'lm', color='red')
+```
+
+As we can expect more sugar will increase the density.
+
+As the density is linked with alcohol, let's see if it is the case
+
+```{r echo=FALSE}
+ggplot(aes(x=density, y=alcohol), data=wine)+
+  geom_point()+
+  geom_smooth(method = 'lm', color='red')
+
+```
+
+```{r echo=FALSE}
+cor.test(wine$alcohol,wine$density, method='pearson')
+```
+
+As we can see more alcohol induces less density which is expected. 
+
+US legal value for volatile acidity is 1.2 g/L
+```{r echo=FALSE}
+ggplot(aes(x=rating, y=volatile.acidity), data=wine)+
+  geom_boxplot()+
+  #adding a reference line for legal limit
+  geom_hline(yintercept=1.2, color='blue', linetype=4)
+
+```
+
+
+# Bivariate Analysis
+
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. How did the feature(s) of interest vary with other features in\
+the dataset?
+
+As I focus on quality wine, I have checked further pH, alcohol,sugar and citric acid.I found that wines have a constant low amount of residual sugar which means they are not sweet wines and do require a high level of fixed acidity to balance
+sugar. I observed also many outliers with the sugar level depending on the rating.The highest rating has more alcohol, higher level of citric acid and less pH. They are only 1.12% of the dataset which means either wine are not good in general or some data are missing. The latter has better chance to be true.
+
+### Did you observe any interesting relationships between the other features \
+(not the main feature(s) of interest)?
+
+All wines (except some outliers) are below the legal limit for volitale acidity. The level of VA is maintened with a low level of free sulfur dioxide which is good otherwise it might begin to smell and the wine considered as bad. Finally the relationship between free SO2 and total SO2 is positive and strong in terms of correlation. We saw that more alcohol induces less density.
+
+### What was the strongest relationship you found?
+
+The strongest positive was between free sulfur dioxide and total sulfur dioxide with a correlation of 0.67. The second one was between pH and fixed acidity at -0.68.Finally citric acid and fixed acidity at a level of 0.67.
+
+# Multivariate Plots Section
+
+
+Lets see the different variables of interest against quality
+
+First, let's see the sugar versus the degree of alcohol
+
+```{r echo=FALSE, Multivariate_Plots}
+ggplot(aes(x=residual.sugar, y=alcohol, color=rating), data=wine)+
+  #set a specific color scheme
+  scale_color_brewer(type = 'div', palette="RdYlBu",
+    guide = guide_legend(title = 'Rating', reverse = T,
+    override.aes = list(size = 2)))+
+  #will darken the lighter point
+  theme_dark()+
+  geom_point()
+  
+```
+
+Another way to see the same data
+
+```{r echo=FALSE}
+ggplot(aes(x=residual.sugar, y=alcohol,color=rating), data=wine)+
+  geom_point()+
+  facet_wrap(~rating)
+```
+  
+As we can see, the better the wine the lower the sugar level.
+
+Now let's see if the percentage of SO2 present against alcohol are related ?
+
+```{r echo=FALSE}
+ggplot(aes(x=alcohol, y=free.sulfur.dioxide/total.sulfur.dioxide, color=rating), data=wine)+
+  geom_point()+ scale_color_brewer(type = "div", palette = "RdYlBu")+
+  theme_dark()+
+  #limiting axis for clarity
+  xlim(7,15)+
+  ylim(0,1)
+```
+
+We have limited the axis as the majority of data are within these limits as well as the wine quality(6 and above). 
+
+Let's see by making different plots with the combinaison of alcohol, sugar and fixed acidity, if something appears
+
+```{r echo=FALSE}
+ggplot(aes(x=fixed.acidity, y=residual.sugar), data=wine)+
+  geom_point(aes(color=alcohol))
+```
+
+```{r echo=FALSE}
+ggplot(aes(x=alcohol, y=residual.sugar), data=wine)+
+  geom_point(aes(color=fixed.acidity))
+
+```
+
+```{r echo=FALSE}
+ggplot(aes(x=alcohol, y=fixed.acidity), data=wine)+
+  geom_point(aes(color=residual.sugar))
+```
+
+Even if these 3 parameters are linked for the quality of the wine, these 3 plots are not helpful.
+
+Lets see with the volatile acidity
+
+```{r echo=FALSE}
+ggplot(aes(x=alcohol, y=volatile.acidity, color= rating), data=wine)+
+  geom_point()+scale_color_brewer(type = "div", palette = "RdYlBu") +theme_dark()
+
+```
+
+As expecter lower quality wines have higher volatile acidity
+
+Finally let's see if the pH is related to SO2
+
+```{r echo=FALSE}
+ggplot(aes(x=pH, y=free.sulfur.dioxide, color=rating), data=wine)+
+  #shading overlapping points and adding noise for more clarity
+  geom_point(alpha=1/2,position = 'jitter')+
+  scale_color_brewer(type = "div", palette = "RdYlBu") +
+  theme_dark()
+```
+
+Let's create a model to estimate the level of alcohol
+
+```{r}
+m1 <- lm(alcohol ~ fixed.acidity, data = wine)
+m2 <- update(m1, ~ . + pH)
+m3 <- update(m2, ~ . + residual.sugar)
+m4 <- update(m3, ~ . + citric.acid)
+m5 <- update(m4, ~ . + density)
+m6 <- update(m5, ~ . + chlorides)
+m7 <- update(m6, ~ . + sulphates)
+mtable(m1, m2, m3, m4,m5,m6,m7)
+```
+
+Alcohol should be 9.4 (as per our dataset) for the following input:
+
+```{r}
+thisWine = data.frame(pH = 3.51, fixed.acidity = 7.4,chlorides=0.076, 
+                         sulphates=0.56,residual.sugar = 1.9, 
+                         citric.acid = 0,density = 0.9978)
+modelEstimate = predict(m7, newdata = thisWine,
+                        interval="prediction", level = .95)
+exp(modelEstimate)
+```
+
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. Were there features that strengthened each other in terms of\
+looking at your feature(s) of interest?
+
+Great wines are in balance with their 4 fundamental traits (acidity, tannin, alcohol and sweetness)
+
+The number of wine of great quality in our dataset is 18 and they have alcohol degree of around 12.We can see that good wines have more higher percentage of SO2.The level of volatile acidity is low with a higher degree of alcohol.  The level of sugar are nearly the same for each category of wine but I observed a slightly higher one for the top range. Maybe this add some complexity to the wine and was therefore more appealing for the tester.Nevertheless the result we have is expected when we know which kind of wine have been measured as it is typical from this region of Portugal.
+
+### Were there any interesting or surprising interactions between features?
+
+Yes,even if 3 parameters (residual sugar, alcohol and fixed acidity) are linked for the quality of the wine, it does not mean that a plot with these features together would be helpful. If we extrapolate, it is not suprising that our model that we calculate was not efficient.
+
+### OPTIONAL: Did you create any models with your dataset? Discuss the \
+strengths and limitations of your model.
+
+I have tried to get a model to predict the level of alcohol in a wine based on the physical variables. However the R squared is at best for 7 variables at 0.66 which is low.The model is not relevant for the purpose based on the result. Adding more variables have not improved significantly the R squared so I didn't search further.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+```{r echo=FALSE, Plot_One}
+#adding color and titles for more clarity
+ggplot(aes(x=alcohol, color=I('black'), fill=I('#099DD9')), data=wine)+
+  geom_histogram(binwidth = 0.1)+
+  ggtitle('How many wines have a specific alcohol degree')+
+  theme(plot.title = element_text(hjust = 0.5))+
+  ylab('Number of wines')+
+  xlab('Degree of alcohol (% by volume)')
+```
+
+### Description One
+This graph comes from the univariant section and it shows that in the dataset a lot of wines were with low alcohol degree. This is normal for "Vinho Verde" wines and it was the start of the search to understand what variables were important for a good wine.
+
+### Plot Two
+```{r echo=FALSE, Plot_Two}
+ggplot(aes(x=rating, y=alcohol), data=wine)+
+  geom_boxplot()+
+  #adding color and titles for more clarity and a reference line for the alcohol
+  #mean
+  geom_hline(yintercept=mean(wine$alcohol),color='blue', linetype=2)+
+  stat_summary(fun.y=mean, geom='point', shape=3)+
+  ggtitle('Distribution of data between wines category and alcohol degree')+
+  theme(plot.title = element_text(hjust = 0.5))+
+  xlab('Quality of wine (score between 0 and 10)')+
+  ylab('Degree of alcohol (% by volume)')
+```
+
+### Description Two
+This graph comes from the bivariant section. It shows the mean of alcohol for each category of wine compared to the blue line which is the mean of alcohol for all wines. We can see that better wines have higher alcohol.
+
+### Plot Three
+```{r echo=FALSE, Plot_Three}
+ggplot(aes(x=residual.sugar, y=alcohol, color=rating), data=wine)+
+  #adding color (with clor brewer package) and titles for more clarity
+  scale_color_brewer(type = "div", palette = "RdYlBu",
+    guide = guide_legend(title = 'Rating', reverse = T,
+    override.aes = list(size = 2)))+
+    #will darken the lighter point
+  theme_dark()+
+  geom_point()+
+  ggtitle('Relationship between alcohol and residual sugar per wine quality')+
+  theme(plot.title = element_text(hjust = 0.5))+
+  xlab(expression(Quantity~of~Residual~Sugar~(g/dm^{3}))) +
+  ylab('Degree of alcohol (% by volume)')
+```
+
+### Description Three
+This graphs comes from the last section. It shows that all wines, independently from their ratings and degree of alcohol have low sugar. These wines are not really sweet then.
+
+------
+
+# Reflection
+
+The dataset has 1599 observations from 12 variables. The dataset is tidy but concentrated on medium quality wine i.e. 5-6 mainly. It is difficult then to have sufficent data to understand if a specific variables would add something for the quality of wine tested or not. However the rating is subjective for everyone and even if the physical components of the wine are in the right region the combinaison of them might not be ideal. Thus the vinification is still an art rather than a science.
+
+Others factors could have also induced differents results. It would have been nice to have wines' prices, when they have been harvested (if it is later it would have more sugar), the kind of earth where they grow, which grapes are in the wines amongst others.
+
+Definitevely our model we calculated was not accurate even if the degree of alcohol should have been possible to predict but I guess some additional parameters have to be taken into account in the fermentation process. 
+
+
+References:
+
+http://wineserver.ucdavis.edu/industry/enology/methods_and_techniques/techniques/ph_analysis.html
+
+https://winefolly.com/review/understanding-acidity-in-wine/
+
+https://vinepair.com/wine-blog/7-things-you-need-to-know-about-vinho-verde/
+
+http://winemakersacademy.com/potassium-metabisulfite-additions/
+
+http://www.diwinetaste.com/dwt/en2007026.php
+
+https://grapesandwine.cals.cornell.edu/sites/grapesandwine.cals.cornell.edu/files/shared/documents/Research-Focus-2011-3.pdf
