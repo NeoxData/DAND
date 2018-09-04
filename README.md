@@ -5,5 +5,5 @@ might need softwares like Jupyter, Python IDE or Rstudio to run specific files. 
 The following projects are:
 1. Analysis of A/B testing
 2. EDA in a red wines dataset
-3. Getting information from a dataset bikeshare using python
-4. Statistical analysis of phero
+3. Exploration of US bikeshare dataset using python and getting descriptive statistics
+4. Statistical analysis of the Stroop Effect
