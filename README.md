@@ -1,7 +1,6 @@
 # DAND
-In this repository you will find some projects done during the Udacity's data analyst courses. Depending on which one, 
-you might need softwares like Jupyter, Python IDE or Rstudio to run specific files. For HTML files, you would "save as" 
-the file to view it in your browser.
+In this repository you will find some projects done for the Udacity's data analyst courses. For HTML files, you 
+would "save as" the file to view it in your browser.
 
 The projects are:
 1. Analysis of A/B testing
