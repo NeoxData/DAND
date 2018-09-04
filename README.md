@@ -1,6 +1,6 @@
 # DAND
-In this repository you will find some projects done for the Udacity's data analyst courses. For HTML files, you 
-would "save as" the file to view it in your browser.
+In this repository you will find some projects done for the Udacity's data analyst courses. For HTML files, you might
+need to "save as" the file (keep the html extension) to view it in your browser.
 
 The projects are:
 1. Analysis of A/B testing
