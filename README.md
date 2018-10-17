@@ -1,6 +1,6 @@
 # DAND
 In this repository you will find some projects done for the Udacity's data analyst courses. For the 'html' file, you
-need to "save as" to view it in your browser. For'.ypnb" file, you will need the Jupyter software.
+need to "save as" to view it in your browser. For'.ipynb" file, you will need the Jupyter software.
 
 The projects are:
 1. Analysis of A/B testing
