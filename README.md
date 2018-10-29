@@ -7,3 +7,4 @@ The projects are:
 2. EDA in a red wines dataset
 3. Exploration of US bikeshare dataset using python and getting descriptive statistics
 4. Statistical analysis of the Stroop Effect
+5. Data Vizualization with Tableau: https://public.tableau.com/shared/KRSF54H89?:display_count=yes
