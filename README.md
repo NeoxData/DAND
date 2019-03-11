@@ -10,4 +10,4 @@ The projects are:
 5. Wrangling datasets from WeRateDogs Twitter's account from 2015 to 2017 from 3 sources:
 Twitter API, URL file based on dogs’ breeds predictions using machine learning models and a given
 file on a dataset filtered partially
-6. Data Vizualization with Tableau: https://public.tableau.com/shared/KRSF54H89?:display_count=yes
+6. Data Vizualization with Tableau: https://public.tableau.com/views/ProjectProsperLoan_Final_5/Story1?:embed=y&:display_count=yes
